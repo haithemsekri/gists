@@ -134,15 +134,16 @@ _NEW_GROUP() {
 
 
 _NEW_PROJECT() {
-   [[ -z "$3" ]] && echo "FAILED_NEW_PROJECTP: invalid argument" && return 0
+   [[ -z "$4" ]] && echo "FAILED_NEW_PROJECTP: invalid argument" && return 0
   _GROUP="$1"
   _PROJECT="$2"
-  _URL="$3"
+  _MAIN_BRANCH="$3"
+  _URL="$4"
   
   _GROUP_ID="$(_NEW_GROUP $_GROUP)"
   ! [[ ! -z "$_GROUP_ID" && "$_GROUP_ID" != "0" && $_GROUP_ID =~ ^-?[0-9]+$ ]] &&  echo "FAILED_NEW_PROJECT: cannot create group $_GROUP _GROUP_ID($_GROUP_ID)" 
 
-  echo "{\"name\":\"$_PROJECT\",\"path\":\"$_PROJECT\",\"description\":\"OriginSourceUrl:$_URL\",\"visibility\":\"public\",\"namespace_id\":\"$_GROUP_ID\",\"initialize_with_readme\":\"false\",\"default_branch\":\"master\"}"  > /tmp/_CURL.stdin
+  echo "{\"name\":\"$_PROJECT\",\"path\":\"$_PROJECT\",\"description\":\"OriginSourceUrl:$_URL\",\"visibility\":\"public\",\"namespace_id\":\"$_GROUP_ID\",\"initialize_with_readme\":\"false\",\"default_branch\":\"$_MAIN_BRANCH\"}"  > /tmp/_CURL.stdin
   _POST projects /tmp/_CURL.stdin
   
   _GET projects
@@ -202,7 +203,9 @@ _MIGRATE_PROJECT() {
 	echo $GROUP
   
   rm -rf $GIT_DIR
+  
 	[[ -f $GIT_DIR.git.unshallow.tar.lz4 ]] && lz4 -dc --no-sparse $GIT_DIR.git.unshallow.tar.lz4 | tar xf -
+  
 	[[ ! -d $GIT_DIR ]] && git clone --depth 1 --no-single-branch $SRC_URL $GIT_DIR
   
 	[[ ! -f $GIT_DIR.git.tar.lz4 ]] && tar -cf - $GIT_DIR | lz4 > $GIT_DIR.git.tar.lz4
@@ -219,8 +222,17 @@ _MIGRATE_PROJECT() {
 	[[ ! -f $GIT_DIR.git.unshallow.tar.lz4 ]] && tar -cf - $GIT_DIR | lz4 > $GIT_DIR.git.unshallow.tar.lz4
 	cd $GIT_DIR
 
-	MAIN_BRANCH="$(git branch | sed 's/*//g')"
-
+	MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
+  [[ -z "$MAIN_BRANCH" ]] && MAIN_BRANCH="master" && git checkout -b $MAIN_BRANCH
+  
+  git checkout $MAIN_BRANCH
+	MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
+  [[ -z "$MAIN_BRANCH" ]] && echo "FAILED: cannot checkout main branch"
+  
+  
+  _NEW_PROJECT $GROUP $PROJECT $MAIN_BRANCH $SRC_URL
+  
+  echo MAIN_BRANCH:$MAIN_BRANCH
 	echo "cloned from : $SRC_URL" > .git/description
 	cat .git/description
 
@@ -243,15 +255,18 @@ _MIGRATE_PROJECT() {
 	git push origin xxyyzz-$FIRST_COMMITS
 	git push origin xxyyzz-$LAST_COMMITS
 
+  git push --set-upstream origin $MAIN_BRANCH
 	git push origin $MAIN_BRANCH
-
 	git push origin --tags
 	git push -u origin --all
+  
+  git for-each-ref --sort=committerdate --format='%(refname)' | grep "xxyyzz" | while read l; do git push --delete origin $(basename /$l); done
+
   cd ..
-  rm -rf $GIT_DIR
+  #rm -rf $GIT_DIR
 }
 
-
+  
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 _FIND_GROUPS STM32 
 _FIND_PROJECT STM32 STM32CubeF1
@@ -280,15 +295,29 @@ _MIGRATE_PROJECT STM32 STM32CubeF1 https://github.com/STMicroelectronics/STM32Cu
 
 
 _NEW_GROUP LINUX
-_NEW_PROJECT LINUX qemu "git://git.qemu.org/qemu.git"
+_NEW_PROJECT LINUX qemu master "git://git.qemu.org/qemu.git"
 _GET_PROJECTS
 _MIGRATE_PROJECT LINUX qemu "git://git.qemu.org/qemu.git"
 
 
 _NEW_GROUP HARDKERNEL
-_NEW_PROJECT HARDKERNEL qemu "https://github.com/hardkernel/linux.git"
+_NEW_PROJECT HARDKERNEL linux master "https://github.com/hardkernel/linux.git"
 _GET_PROJECTS
-_MIGRATE_PROJECT HARDKERNEL qemu "https://github.com/hardkernel/linux.git"
+_MIGRATE_PROJECT HARDKERNEL linux "https://github.com/hardkernel/linux.git"
+
+
+
+_NEW_GROUP CODEAURORA
+_NEW_PROJECT CODEAURORA imx-xen master "https://source.codeaurora.org/external/imx/imx-xen"
+_GET_PROJECTS
+_MIGRATE_PROJECT CODEAURORA imx-xen "https://source.codeaurora.org/external/imx/imx-xen"
+
+_NEW_GROUP CODEAURORA
+_NEW_PROJECT CODEAURORA linux-imx master "https://source.codeaurora.org/external/imx/linux-imx"
+_GET_PROJECTS
+_MIGRATE_PROJECT CODEAURORA linux-imx "https://source.codeaurora.org/external/imx/linux-imx"
+
+
 
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
