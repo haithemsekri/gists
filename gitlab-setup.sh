@@ -22,7 +22,7 @@ external_url 'http://gitlab.hsekri.com'
 gitlab-ctl reconfigure
 cat /etc/gitlab/initial_root_password
 Password: k9hWa/UVeaHzX5G8x4//wGmvHuLBoe2gV56b/iLHxbU=
-# http://gitlab.hsekri.com 
+# http://gitlab.hsekri.com
 gitlab-rake "gitlab:password:reset"
 USR:haithem.sekri PASS:haithem.sekri.passwd TOKEN: vje-5-G6A8HT2F1hypLY
 
@@ -73,13 +73,13 @@ _CURL() {
   type=$1
   sub_url=$2
   shift 2
-	
+
   extra_args=""
-  if [[ -z "$1" ]]; then 
+  if [[ -z "$1" ]]; then
     extra_args=""
-  elif [[ -f "$1"  ]]; then 
+  elif [[ -f "$1"  ]]; then
     extra_args="-d @$@"
-  else 
+  else
     extra_args="--data $@"
   fi
   rm -rf /tmp/_CURL.stdout /tmp/_CURL.stderr
@@ -102,7 +102,7 @@ _DELETE() {
   _CURL DELETE $@
 }
 
- 
+
 FIX_JSON() {
         echo $@  | \
           grep -v ": {}" | tr  -d ' ' | tr -d '\n' | sed 's/,}/}/g' | jq '.'  | \
@@ -111,25 +111,25 @@ FIX_JSON() {
           grep -v ": {}" | tr  -d ' ' | tr -d '\n' | sed 's/,}/}/g'
 }
 
-_GET projects 
-cat /tmp/_CURL.stdout | jq '.'
-_GET groups
-cat /tmp/_CURL.stdout | jq '.'
+# _GET projects
+# cat /tmp/_CURL.stdout | jq '.'
+# _GET groups
+# cat /tmp/_CURL.stdout | jq '.'
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 _NEW_GROUP() {
    [[ -z "$1" ]] && echo "FAILED_NEW_GROUP: invalid argument" && return 0
   _GROUP="$1"
-  
+
   echo "{\"name\":\"$_GROUP\",\"path\":\"$_GROUP\",\"description\":\"$_GROUP Group\",\"visibility\":\"public\",\"parent_id\":null}" > /tmp/_CURL.stdin
   _POST groups /tmp/_CURL.stdin
-  
+
   _GET groups
   [[ ! -f /tmp/_CURL.stdout ]] && echo "_CURL.stdout Not Found" && return 0
   _GROUP_ID="$(cat /tmp/_CURL.stdout | jq '.' | grep  -B 4 "\"path\": \"$_GROUP\""  | grep "\"id\":" | cut -d ':' -f 2 | cut -d ',' -f 1 | xargs)"
-  [[ ! -z "$_GROUP_ID" && "$_GROUP_ID" != "0" && $_GROUP_ID =~ ^-?[0-9]+$ ]] && echo "$_GROUP_ID" || echo "FAILED_NEW_GROUP: cannot create group $_GROUP _GROUP_ID($_GROUP_ID)" 
+  [[ ! -z "$_GROUP_ID" && "$_GROUP_ID" != "0" && $_GROUP_ID =~ ^-?[0-9]+$ ]] && echo "$_GROUP_ID" || echo "FAILED_NEW_GROUP: cannot create group $_GROUP _GROUP_ID($_GROUP_ID)"
 }
 
 
@@ -139,43 +139,43 @@ _NEW_PROJECT() {
   _PROJECT="$2"
   _MAIN_BRANCH="$3"
   _URL="$4"
-  
+
   _GROUP_ID="$(_NEW_GROUP $_GROUP)"
-  ! [[ ! -z "$_GROUP_ID" && "$_GROUP_ID" != "0" && $_GROUP_ID =~ ^-?[0-9]+$ ]] &&  echo "FAILED_NEW_PROJECT: cannot create group $_GROUP _GROUP_ID($_GROUP_ID)" 
+  ! [[ ! -z "$_GROUP_ID" && "$_GROUP_ID" != "0" && $_GROUP_ID =~ ^-?[0-9]+$ ]] &&  echo "FAILED_NEW_PROJECT: cannot create group $_GROUP _GROUP_ID($_GROUP_ID)"
 
   echo "{\"name\":\"$_PROJECT\",\"path\":\"$_PROJECT\",\"description\":\"OriginSourceUrl:$_URL\",\"visibility\":\"public\",\"namespace_id\":\"$_GROUP_ID\",\"initialize_with_readme\":\"false\",\"default_branch\":\"$_MAIN_BRANCH\"}"  > /tmp/_CURL.stdin
   _POST projects /tmp/_CURL.stdin
-  
+
   _GET projects
   [[ ! -f /tmp/_CURL.stdout ]] && echo "_CURL.stdout Not Found" && return 0
   _PROJECT_ID="$(cat /tmp/_CURL.stdout | jq '.' | grep  -B 12  "\"http_url_to_repo\": \"http://$GIT_DNS/$_GROUP/$_PROJECT.git\""   | grep "\"id\":" | cut -d ':' -f 2 | cut -d ',' -f 1 | xargs)"
-  [[ ! -z "$_PROJECT_ID" && "$_PROJECT_ID" != "0" && $_PROJECT_ID =~ ^-?[0-9]+$ ]] && echo "$_PROJECT_ID" || echo "FAILED_NEW_PROJECT: cannot create project $_PROJECT _PROJECT_ID($_PROJECT_ID)" 
+  [[ ! -z "$_PROJECT_ID" && "$_PROJECT_ID" != "0" && $_PROJECT_ID =~ ^-?[0-9]+$ ]] && echo "$_PROJECT_ID" || echo "FAILED_NEW_PROJECT: cannot create project $_PROJECT _PROJECT_ID($_PROJECT_ID)"
 }
 
 
 _GET_GROUPS() {
   _GET groups
   [[ ! -f /tmp/_CURL.stdout ]] && echo "_CURL.stdout Not Found" && return 0
-  
-	_GROUPS="$(cat /tmp/_CURL.stdout  | jq '.' | grep '"id"\|"path"\|{\|}')"
-	JSON="$(FIX_JSON "{\"GROUPS\": [$_GROUPS]}")"
-	[[ ! -z "$1" ]] && echo $JSON | jq ".GROUPS | .[$1]"
-	[[ -z "$1" ]] && echo $JSON | jq '.'
+
+  _GROUPS="$(cat /tmp/_CURL.stdout  | jq '.' | grep '"id"\|"path"\|{\|}')"
+  JSON="$(FIX_JSON "{\"GROUPS\": [$_GROUPS]}")"
+  [[ ! -z "$1" ]] && echo $JSON | jq ".GROUPS | .[$1]"
+  [[ -z "$1" ]] && echo $JSON | jq '.'
 }
 
 _GET_PROJECTS() {
   _GET projects
   [[ ! -f /tmp/_CURL.stdout ]] && echo "_CURL.stdout Not Found" && return 0
-	_PROJECTS="$(cat /tmp/_CURL.stdout | jq '.' | grep '"id":\|"name":\|"http_url_to_repo":\|"description":\|"namespace":\|{\|}' )"
-	JSON="$(FIX_JSON "{\"PROJECTS\": [$_PROJECTS]}")"
-	[[ ! -z "$1" ]] && echo $JSON | jq ".PROJECTS | .[$1]"
-	[[ -z "$1" ]] && echo $JSON | jq '.'
+  _PROJECTS="$(cat /tmp/_CURL.stdout | jq '.' | grep '"id":\|"name":\|"http_url_to_repo":\|"description":\|"namespace":\|{\|}' )"
+  JSON="$(FIX_JSON "{\"PROJECTS\": [$_PROJECTS]}")"
+  [[ ! -z "$1" ]] && echo $JSON | jq ".PROJECTS | .[$1]"
+  [[ -z "$1" ]] && echo $JSON | jq '.'
 }
 
 _FIND_GROUPS() {
   [[ -z "$1" ]] && echo "FAILED_FIND_GROUPS: invalid argument" && return 0
   _GROUP="$1"
-	echo "$(_GET_GROUPS)" |  jq ".GROUPS[] | select(.path == \"$_GROUP\")"
+  echo "$(_GET_GROUPS)" |  jq ".GROUPS[] | select(.path == \"$_GROUP\")"
 }
 
 
@@ -183,92 +183,126 @@ _FIND_PROJECT() {
   [[ -z "$2" ]] && echo "FAILED_FIND_PROJECT: invalid argument" && return 0
   _GROUP="$1"
   _PROJECT="$2"
-	echo "$(_GET_PROJECTS)" |  jq ".PROJECTS[] | select(.http_url_to_repo == \"http://$GIT_DNS/$_GROUP/$_PROJECT.git\")"
+  echo "$(_GET_PROJECTS)" |  jq ".PROJECTS[] | select(.http_url_to_repo == \"http://$GIT_DNS/$_GROUP/$_PROJECT.git\")"
 }
 
+
+_ADD_MAIN_BRANCH() {
+  [[ ! -d ".git" ]] && echo "Not a git repo" && return 0
+
+  local GROUP="$1"
+  local PROJECT="$2"
+  local SRC_URL="$3"
+  local GIT_DIR="$GROUP.$PROJECT"
+
+  MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
+  [[ ! -z "$MAIN_BRANCH" ]] && echo "Already set to $MAIN_BRANCH" && return 0
+
+  MAIN_BRANCH="master"
+  git checkout $MAIN_BRANCH
+  MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
+  [[ ! -z "$MAIN_BRANCH" ]] && echo "Already set to master" && return 0
+
+  MAIN_BRANCH="main"
+  git checkout $MAIN_BRANCH
+  MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
+  [[ ! -z "$MAIN_BRANCH" ]] && echo "Already set to main" && return 0
+
+  MAIN_BRANCH="main"
+  git checkout -b $MAIN_BRANCH
+
+  rm -rf README.project
+  echo "Project:$PROJECT" >> README.project
+  echo "OriginSourceUrl:$SRC_URL" >> README.project
+
+  git add README.project
+  git config user.name $GIT_USR
+  git config user.email $GIT_EMAIL
+  git commit -m "Add main branch"
+  git push --set-upstream origin $MAIN_BRANCH
+  git push origin $MAIN_BRANCH
+}
+
+_ADD_MIGRATION_TAGS() {
+  i=1000000
+  while [ $i -ge 0 ]
+  do
+    _COMMIT_ID="$(git log --skip=$i --max-count=1 | grep commit | head -1 | cut -d ' ' -f2)"
+    if [[ ! -z "$_COMMIT_ID" ]]; then
+      echo _COMMIT_ID:$_COMMIT_ID
+      git tag xxyyzz-$_COMMIT_ID $_COMMIT_ID
+      git push origin xxyyzz-$_COMMIT_ID
+    fi
+    let "i-=100000"
+  done
+  #COMMITS="$(git rev-list --max-parents=0 HEAD)"
+
+  #FIRST_COMMITS="$(echo $COMMITS | cut -d ' ' -f 1)"
+  #echo FIRST_COMMITS:$FIRST_COMMITS
+  #git tag xxyyzz-$FIRST_COMMITS $FIRST_COMMITS
+  #git push origin xxyyzz-$FIRST_COMMITS
+
+  #LAST_COMMITS="$(git rev-parse HEAD)"
+  #echo LAST_COMMITS:$LAST_COMMITS
+  #git tag xxyyzz-$LAST_COMMITS $LAST_COMMITS
+  #git push origin xxyyzz-$LAST_COMMITS
+}
+
+
+_REMOVE_MIGRATION_TAGS() {
+  git for-each-ref --sort=committerdate --format='%(refname)' | grep "xxyyzz" | while read l; do git push --delete origin $(basename /$l); done
+}
 
 _MIGRATE_PROJECT() {
-	[[ -z "$3" ]] && echo "Require 3 arguments: GROUP REPO SRC_URL" && exit 0
+  [[ -z "$3" ]] && echo "Require 3 arguments: GROUP REPO SRC_URL" && exit 0
 
-	GROUP="$1"
-	PROJECT="$2"
-	GIT_DIR="$GROUP.$PROJECT"
-	SRC_URL="$3"
+  GROUP="$1"
+  PROJECT="$2"
+  GIT_DIR="$GROUP.$PROJECT"
+  SRC_URL="$3"
 
-	#SRC_URL="git://git.qemu.org/qemu.git"
-	#GROUP="linux"
-	#PROJECT="$(basename $SRC_URL | sed 's/.git//g')"
+  echo $PROJECT
+  echo $GROUP
 
-	echo $PROJECT
-	echo $GROUP
-  
   rm -rf $GIT_DIR
-  
-	[[ -f $GIT_DIR.git.unshallow.tar.lz4 ]] && lz4 -dc --no-sparse $GIT_DIR.git.unshallow.tar.lz4 | tar xf -
-  
-	[[ ! -d $GIT_DIR ]] && git clone --depth 1 --no-single-branch $SRC_URL $GIT_DIR
-  
-	[[ ! -f $GIT_DIR.git.tar.lz4 ]] && tar -cf - $GIT_DIR | lz4 > $GIT_DIR.git.tar.lz4
 
-	cd  $GIT_DIR
-	git config --get remote.origin.url
+  [[ -f $GIT_DIR.git.unshallow.tar.lz4 ]] && lz4 -dc --no-sparse $GIT_DIR.git.unshallow.tar.lz4 | tar xf -
+  [[ ! -d $GIT_DIR ]] && git clone --depth 1 --no-single-branch $SRC_URL $GIT_DIR
+  [[ ! -f $GIT_DIR.git.tar.lz4 ]] && tar -cf - $GIT_DIR | lz4 > $GIT_DIR.git.tar.lz4
+
+  cd  $GIT_DIR
+  git config --get remote.origin.url
   git config pull.rebase true
-# hint:   git config pull.rebase false  # merge (the default strategy)
-# hint:   git config pull.rebase true   # rebase
-# hint:   git config pull.ff only       # fast-forward only
-	git pull --unshallow
-
-	cd ..
-	[[ ! -f $GIT_DIR.git.unshallow.tar.lz4 ]] && tar -cf - $GIT_DIR | lz4 > $GIT_DIR.git.unshallow.tar.lz4
-	cd $GIT_DIR
-
-	MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
-  [[ -z "$MAIN_BRANCH" ]] && MAIN_BRANCH="master" && git checkout -b $MAIN_BRANCH
-  
-  git checkout $MAIN_BRANCH
-	MAIN_BRANCH="$(git branch | sed 's/*//g' | xargs)"
-  [[ -z "$MAIN_BRANCH" ]] && echo "FAILED: cannot checkout main branch"
-  
-  
-  _NEW_PROJECT $GROUP $PROJECT $MAIN_BRANCH $SRC_URL
-  
-  echo MAIN_BRANCH:$MAIN_BRANCH
-	echo "cloned from : $SRC_URL" > .git/description
-	cat .git/description
-
-	git remote remove origin
-	git remote add origin $GIT_URL/$GROUP/$PROJECT.git
-
-	COMMITS="$(git rev-list --max-parents=0 HEAD)"
-	LAST_COMMITS="$(git rev-parse HEAD)"
-
-	FIRST_COMMITS="$(echo $COMMITS | cut -d ' ' -f 1)"
-	#echo $COMMITS | cut -d ' ' -f 2
-	echo FIRST_COMMITS:$FIRST_COMMITS
-	echo LAST_COMMITS:$LAST_COMMITS
-
-	git tag xxyyzz-$FIRST_COMMITS $FIRST_COMMITS
-	git tag xxyyzz-$LAST_COMMITS $LAST_COMMITS
-
-	git for-each-ref --sort=committerdate --format='%(refname)'
-
-	git push origin xxyyzz-$FIRST_COMMITS
-	git push origin xxyyzz-$LAST_COMMITS
-
-  git push --set-upstream origin $MAIN_BRANCH
-	git push origin $MAIN_BRANCH
-	git push origin --tags
-	git push -u origin --all
-  
-  git for-each-ref --sort=committerdate --format='%(refname)' | grep "xxyyzz" | while read l; do git push --delete origin $(basename /$l); done
+  git pull --unshallow &>/dev/null
 
   cd ..
-  #rm -rf $GIT_DIR
+  [[ ! -f $GIT_DIR.git.unshallow.tar.lz4 ]] && tar -cf - $GIT_DIR | lz4 > $GIT_DIR.git.unshallow.tar.lz4
+  cd $GIT_DIR
+
+  echo "OriginSourceUrl:$SRC_URL" > .git/description
+  cat .git/description
+
+  git remote remove origin
+  git remote add origin $GIT_URL/$GROUP/$PROJECT.git
+
+  _ADD_MAIN_BRANCH $GROUP $PROJECT $SRC_URL
+
+  REPO_SIZE="$(du -s . | cut -d '.' -f1)"
+  [[ $REPO_SIZE -gt 1048576 ]] && _ADD_MIGRATION_TAGS
+
+  git push origin --tags
+  git push -u origin --all
+
+  [[ $REPO_SIZE -gt 1048576 ]] && _REMOVE_MIGRATION_TAGS
+
+  cd ..
+  rm -rf $GIT_DIR
+  _FIND_PROJECT $GROUP $PROJECT
 }
 
-  
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-_FIND_GROUPS STM32 
+_FIND_GROUPS STM32
 _FIND_PROJECT STM32 STM32CubeF1
 
 
@@ -300,31 +334,67 @@ _GET_PROJECTS
 _MIGRATE_PROJECT LINUX qemu "git://git.qemu.org/qemu.git"
 
 
-_NEW_GROUP HARDKERNEL
-_NEW_PROJECT HARDKERNEL linux master "https://github.com/hardkernel/linux.git"
-_GET_PROJECTS
-_MIGRATE_PROJECT HARDKERNEL linux "https://github.com/hardkernel/linux.git"
-
-
 
 _NEW_GROUP CODEAURORA
-_NEW_PROJECT CODEAURORA imx-xen master "https://source.codeaurora.org/external/imx/imx-xen"
-_GET_PROJECTS
-_MIGRATE_PROJECT CODEAURORA imx-xen "https://source.codeaurora.org/external/imx/imx-xen"
-
-_NEW_GROUP CODEAURORA
-_NEW_PROJECT CODEAURORA linux-imx master "https://source.codeaurora.org/external/imx/linux-imx"
-_GET_PROJECTS
 _MIGRATE_PROJECT CODEAURORA linux-imx "https://source.codeaurora.org/external/imx/linux-imx"
 
+
+_NEW_GROUP CODEAURORA
+_FIND_PROJECT CODEAURORA imx-xen
+_DELETE projects/29
+_FIND_PROJECT CODEAURORA imx-xen
+_NEW_PROJECT CODEAURORA imx-xen main "https://source.codeaurora.org/external/imx/imx-xen"
+_FIND_PROJECT CODEAURORA imx-xen
+_MIGRATE_PROJECT CODEAURORA imx-xen "https://source.codeaurora.org/external/imx/imx-xen"
+
+
+_NEW_GROUP LINUX
+_FIND_PROJECT LINUX qemu
+_DELETE projects/33
+_NEW_PROJECT LINUX qemu main "git://git.qemu.org/qemu.git"
+_FIND_PROJECT LINUX qemu
+_MIGRATE_PROJECT LINUX qemu "git://git.qemu.org/qemu.git"
+
+_NEW_GROUP HARDKERNEL
+_FIND_PROJECT HARDKERNEL linux
+_DELETE projects/36
+_NEW_PROJECT HARDKERNEL linux main "https://github.com/hardkernel/linux.git"
+_MIGRATE_PROJECT HARDKERNEL linux "https://github.com/hardkernel/linux.git"
 
 
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+GROUP="CODEAURORA"
+PROJECT="imx-xen"
+SRC_URL="https://source.codeaurora.org/external/imx/imx-xen"
+git clone $SRC_URL $PROJECT.git
+cp -r $PROJECT.git  $PROJECT.git.origin
+
+MAIN_BRANCH="$(basename $(git for-each-ref --sort=committerdate --format='%(refname)' | grep tags | tail -1))"
+echo $MAIN_BRANCH
+
+echo _NEW_PROJECT $GROUP $PROJECT $MAIN_BRANCH $SRC_URL
+_NEW_PROJECT $GROUP $PROJECT $MAIN_BRANCH $SRC_URL
+_FIND_PROJECT $GROUP $PROJECT
+
+echo "OriginSourceUrl:$SRC_URL" > .git/description
+cat .git/description
+
+git remote remove origin
+git remote add origin $GIT_URL/$GROUP/$PROJECT.git
+
+git remote -vv
+
+git push origin $MAIN_BRANCH
+git push origin --tags
+git push -u origin --all
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 groupadd -g 1001 hs
 useradd -s /bin/bash -r -p b  -u 1001 -g 1001 -m -d /home/hs hs
-  
+
   109  usermod -s /bin/sh -d /var/opt/gitlab git
   110  kill -9 860
   111  usermod -s /bin/sh -d /var/opt/gitlab git
@@ -333,7 +403,7 @@ useradd -s /bin/bash -r -p b  -u 1001 -g 1001 -m -d /home/hs hs
   114  cp -r gitlab.old gitlab
   115  kill -9 885
   116  usermod -s /bin/sh -d /var/opt/gitlab git
-  
+
 lsblk
 fdisk /dev/sdb
 mkfs.ext4 /dev/sdb1
@@ -462,8 +532,8 @@ reboot
   163  su hs
   164  exit
   165  history
-  
-  
+
+
       1  sudo passwd
     2  cd /lib
     3  cd systemd/
