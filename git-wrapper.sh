@@ -59,6 +59,7 @@ git_config_wrapper() {
       break
     fi
   done
+  /usr/bin/git config branch.master.pushRemote  true
   /usr/bin/git config --get  user.name
   /usr/bin/git config --get  user.email
 }
