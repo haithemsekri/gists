@@ -227,7 +227,7 @@ _ADD_MIGRATION_TAGS() {
   i=1000000
   while [ $i -ge 0 ]
   do
-    _COMMIT_ID="$(git log --skip=$i --max-count=1 | grep commit | head -1 | cut -d ' ' -f2)"
+    _COMMIT_ID="$(git log --skip=$i --max-count=1 --pretty=oneline | cut -d ' ' -f1 | xargs)"
     if [[ ! -z "$_COMMIT_ID" ]]; then
       echo _COMMIT_ID:$_COMMIT_ID
       git tag xxyyzz-$_COMMIT_ID $_COMMIT_ID
@@ -235,17 +235,6 @@ _ADD_MIGRATION_TAGS() {
     fi
     let "i-=100000"
   done
-  #COMMITS="$(git rev-list --max-parents=0 HEAD)"
-
-  #FIRST_COMMITS="$(echo $COMMITS | cut -d ' ' -f 1)"
-  #echo FIRST_COMMITS:$FIRST_COMMITS
-  #git tag xxyyzz-$FIRST_COMMITS $FIRST_COMMITS
-  #git push origin xxyyzz-$FIRST_COMMITS
-
-  #LAST_COMMITS="$(git rev-parse HEAD)"
-  #echo LAST_COMMITS:$LAST_COMMITS
-  #git tag xxyyzz-$LAST_COMMITS $LAST_COMMITS
-  #git push origin xxyyzz-$LAST_COMMITS
 }
 
 
@@ -360,6 +349,13 @@ _FIND_PROJECT HARDKERNEL linux
 _DELETE projects/36
 _NEW_PROJECT HARDKERNEL linux main "https://github.com/hardkernel/linux.git"
 _MIGRATE_PROJECT HARDKERNEL linux "https://github.com/hardkernel/linux.git"
+
+
+_NEW_GROUP CODEAURORA
+_FIND_PROJECT CODEAURORA linux-imx
+_DELETE projects/17
+_NEW_PROJECT CODEAURORA linux-imx main "https://source.codeaurora.org/external/imx/linux-imx"
+_MIGRATE_PROJECT CODEAURORA linux-imx "https://source.codeaurora.org/external/imx/linux-imx"
 
 
 
