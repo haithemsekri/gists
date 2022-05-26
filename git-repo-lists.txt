@@ -1,0 +1,3 @@
+poky Yocto https://git.yoctoproject.org/poky
+bitbake Yocto https://git.openembedded.org/bitbake
+meta-openembedded Yocto https://git.openembedded.org/meta-openembedded
