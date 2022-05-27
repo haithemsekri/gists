@@ -14,4 +14,4 @@ SetupToolchain() {
 
 [[ ! -d $CURR_DIR/gcc-aarch64-linux/bin ]] && SetupToolchain
 
-env -i bash --init-file  <(echo export CURR_DIR=$CURR_DIR; cat $CURR_DIR/*.env; cat $CURR_DIR/../*.env)
+env -i bash --init-file  <(echo export CURR_DIR=$CURR_DIR; cat $CURR_DIR/setup.env; cat $CURR_DIR/build.env; cat $CURR_DIR/../*.env)

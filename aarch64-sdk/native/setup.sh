@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -aux
 
 CURR_DIR="$(dirname $(realpath $0))"
 
