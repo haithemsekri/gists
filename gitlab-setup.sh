@@ -372,7 +372,18 @@ _DELETE projects/57
 _NEW_PROJECT Linux xenbits-xen main "https://xenbits.xen.org/git-http/xen.git"
 time _MIGRATE_PROJECT Linux xenbits-xen "https://xenbits.xen.org/git-http/xen.git"
 
+_NEW_GROUP Linux
+_FIND_PROJECT Linux qemu
+_DELETE projects/57
+_NEW_PROJECT Linux qemu master "git://git.qemu.org/qemu.git"
+time _MIGRATE_PROJECT Linux qemu "git://git.qemu.org/qemu.git"
 
+
+
+_NEW_GROUP LINUX
+_NEW_PROJECT LINUX qemu master "git://git.qemu.org/qemu.git"
+_GET_PROJECTS
+_MIGRATE_PROJECT LINUX qemu "git://git.qemu.org/qemu.git"
 
 
 
