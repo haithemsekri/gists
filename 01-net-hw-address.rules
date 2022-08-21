@@ -1,7 +1,7 @@
 #debian_buster
 root@buster:~# cat  /etc/udev/rules.d/01-net-hw-address.rules 
 KERNEL=="ens*", SUBSYSTEM=="net", ACTION=="add", RUN+="ip addr flush dev %k"
-KERNEL=="ens*", SUBSYSTEM=="net", ACTION=="add", RUN+="/usr/sbin/ip link set %k address 2a:b8:6d:a6:01:0c
+KERNEL=="ens*", SUBSYSTEM=="net", ACTION=="add", RUN+="/usr/sbin/ip link set %k address 2a:b8:6d:a6:01:0c"
 
 cat  /etc/dhcp/dhclient.conf
 alias {
@@ -24,3 +24,8 @@ IPForward=yes
 IPMasquerade=yes
 Address=172.22.1.14/24
 Address=172.22.1.191/24
+
+root@buster-vm:~# cat /etc/sysctl.conf
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
