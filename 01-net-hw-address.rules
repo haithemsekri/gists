@@ -1,0 +1,1 @@
+KERNEL=="ens18", SUBSYSTEM=="net", ACTION=="add", RUN+="/usr/sbin/ip link set ens18 address 2a:b8:6d:a6:01:0c"
