@@ -12,3 +12,15 @@ alias {
   option subnet-mask 255.255.255.0;
 }
 #apt purge ifupdown
+
+#ubuntu
+root@ub22041gnome:/etc/systemd/network# cat ens18.network 
+[Match]
+MACAddress=f6:c1:aa:5f:68:61
+
+[Network]
+DHCP=ipv4
+IPForward=yes
+IPMasquerade=yes
+Address=172.22.1.14/24
+Address=172.22.1.191/24
