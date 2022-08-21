@@ -1,1 +1,14 @@
-KERNEL=="ens18", SUBSYSTEM=="net", ACTION=="add", RUN+="/usr/sbin/ip link set ens18 address 2a:b8:6d:a6:01:0c"
+#debian_buster
+root@buster:~# cat  /etc/udev/rules.d/01-net-hw-address.rules 
+KERNEL=="ens*", SUBSYSTEM=="net", ACTION=="add", RUN+="ip addr flush dev %k"
+KERNEL=="ens*", SUBSYSTEM=="net", ACTION=="add", RUN+="/usr/sbin/ip link set %k address 2a:b8:6d:a6:01:0c
+
+cat  /etc/dhcp/dhclient.conf
+alias {
+  interface "ens18";
+  fixed-address 172.22.1.12;
+  option host-name "proxmox.vm.buster";
+  option routers 172.22.1.1;
+  option subnet-mask 255.255.255.0;
+}
+#apt purge ifupdown
