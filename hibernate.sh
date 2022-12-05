@@ -5,6 +5,8 @@ ethtool -s enp6s0  wol g
 echo 1 > /proc/sys/kernel/sysrq
 sync
 echo s > /proc/sysrq-trigger
+sleep 1
+sync
 mount | grep -E '^/' | grep -v fuse | sed 's/ on / /g' |  sed 's/ type / -t /g'  |  sed 's/ (/ -o remount,/g'   |  sed 's/)//g' > /tmp/mount.backup
 echo u > /proc/sysrq-trigger
 
