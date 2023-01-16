@@ -154,7 +154,7 @@ void * _malloc(size_t l)
       assert_return(NULL, p < s_iheap_end);
     }
     assert_return(NULL, ZERO_BYTE == p[1]);
-    L_DEBUG("p - s_iheap_start [%ld] : %lx\n", l, ((uintptr_t)p - (uintptr_t)s_iheap_start));
+    //L_DEBUG("p - s_iheap_start [%ld] : %lx\n", l, ((uintptr_t)p - (uintptr_t)s_iheap_start));
     s_last_p = &p[ENTRY_LEN];
     s_last_p = (s_last_p + 1 >= s_iheap_end) ? s_iheap_start : s_last_p;
 
@@ -250,7 +250,7 @@ const void * xptr_assert(const void * ptr, uint8_t val, size_t pos, size_t len, 
 {
   (void) val;
 
-  L_DEBUG("%s:%d: xptr_assert(%lx[%ld + %ld])\n", file, line, (uintptr_t) ptr, pos, len);
+  // L_DEBUG("%s:%d: xptr_assert(%lx[%ld + %ld])\n", file, line, (uintptr_t) ptr, pos, len);
   
   char * ret_ptr = (char *) xptr_valid(ptr, pos + len);
   if (!ret_ptr) {
@@ -274,6 +274,22 @@ const void * xptr_assert(const void * ptr, uint8_t val, size_t pos, size_t len, 
 int main (void)
 {
   size_t cyc1 = rdtsc();
+
+  
+  for (size_t i = 0; i < UINT16_MAX * 1024; i++) {
+    
+    _free(_malloc(1));
+    _free(_malloc(128));
+    _free(_malloc(4096));
+
+    /*_free(_malloc(1));
+    _free(_malloc(128));
+    _free(_malloc(4096));*/
+  }
+
+  L_DEBUG("cyc2 - cyc1 %ld\n", rdtsc() - cyc1);
+  return 0;
+
   // _free((void *) &cyc1);
 
   //_free(_malloc(0));
