@@ -1,5 +1,8 @@
-
-
+#https://github.com/EttusResearch/uhd/blob/master/mpm/python/usrp_mpm/sys_utils/net.py
+# https://pypi.org/project/pyroute2/0.3.14/
+# https://snyk.io/advisor/python/pyroute2/functions/pyroute2.IPRoute
+# https://docs.pyroute2.org/iproute.html
+# https://pypi.org/project/pyroute2/
 def get_iface_addrs(mac_addr):
     """
     Return a list of IPv4 addresses for a given MAC address.
